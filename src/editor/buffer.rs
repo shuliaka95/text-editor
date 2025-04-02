@@ -4,6 +4,7 @@ use std::collections::VecDeque;
 // Структура для хранения позиции курсора в тексте
 // line - номер строки (начиная с 0)
 // column - номер столбца в строке (начиная с 0)
+#[derive(Copy, Clone)]
 pub struct Position {
     pub line: usize,    // Номер строки
     pub column: usize,  // Номер столбца
@@ -169,9 +170,14 @@ impl Buffer {
         if self.cursor.column == 0 {
             return Err("Курсор в начале строки".to_string());
         }
-
-        // TODO: Реализовать удаление символа
-        todo!()
+        
+        // Удаляем символ
+        line.remove(self.cursor.column - 1);
+        
+        // Обновляем позицию курсора
+        self.cursor.column -= 1;
+        
+        Ok(())
     }
 
     // Вставляем новую строку
@@ -184,7 +190,7 @@ impl Buffer {
         }
 
         // Получаем текущую строку
-        let line = &mut self.lines[self.cursor.line];
+        let line = self.get_current_line();
         
         // Проверяем что курсор в пределах строки
         if self.cursor.column > line.len() {
@@ -196,8 +202,8 @@ impl Buffer {
             return Err("Буфер переполнен".to_string());
         }
 
-        // TODO: Реализовать вставку новой строки
-        todo!()
+        // Вставляем символ новой строки
+        self.insert_char('\n')
     }
 
     // Получаем весь текст из буфера
@@ -221,8 +227,14 @@ impl Buffer {
             }
         }
 
-        // TODO: Реализовать получение текста
-        todo!()
+        // Объединяем все строки с разделителем новой строки
+        let text = self.lines
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<&str>>()
+            .join("\n");
+
+        Ok(text)
     }
 
     // Устанавливаем новый текст в буфер
@@ -246,6 +258,21 @@ impl Buffer {
 
         // TODO: Реализовать установку текста
         todo!()
+    }
+    pub fn get_cursor_position(&self) -> Position {
+        self.cursor
+    }
+
+    pub fn get_all_lines(&self) -> &VecDeque<String> {
+        &self.lines
+    }
+
+    pub fn get_current_line(&self) -> &str {
+        if self.cursor.line < self.lines.len() {
+            &self.lines[self.cursor.line]
+        } else {
+            ""
+        }
     }
 }
 
