@@ -1,0 +1,20 @@
+# Сгенерированные файлы Cargo
+/target/
+**/*.rs.bk
+
+# Файлы IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# Файлы логов
+*.log
+
+# Локальные настройки
+.env
+.env.local

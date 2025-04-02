@@ -1,0 +1,13 @@
+[package]
+name = "simple-text-editor"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A simple text editor written in Rust"
+
+[dependencies]
+egui = "0.24.0"        # GUI framework
+rfd = "0.11.1"         # File dialogs
+anyhow = "1.0"         # Error handling
+log = "0.4"            # Logging
+env_logger = "0.10"    # Logging implementation
