@@ -255,8 +255,44 @@ impl Buffer {
             return Err("Текст содержит недопустимые управляющие символы".to_string());
         }
 
-        // TODO: Реализовать установку текста
-        todo!()
+        //устанавливаем новый текст в буфер
+        //разбиваем текст на строки
+        let lines:Vec<String> = text
+            .split('\n')
+            .map(|s| s.to_string())
+            .collect();
+
+        //замена табуляции на пробелы
+        let lines:Vec<String> = text
+            .split('\n')
+            .map(|s| s.replace('t', "    "))
+            .collect();
+
+        //проверка на количество строк
+        if lines.len() > usize::MAX {
+            return Err("Слишком много строк".to_string());
+        }
+
+        //если нет строк, добавляем одну пустую
+        if lines.is_empty() {
+            self.lines.clear();
+            self.lines.push_back(String::new());
+        }
+        else{
+            //очищаем текущий буфер и добавляем новые строки
+            self.lines.clear();
+            for line in lines {
+                self.lines.push_back(line);
+            }
+        }
+
+        //сбрасываем позицию курсора в начало
+        self.cursor = Position { line: 0, column: 0 };
+
+        //очищаем выделение
+        self.selection = None;
+
+        Ok(())
     }
     pub fn get_cursor_position(&self) -> Position {
         self.cursor
