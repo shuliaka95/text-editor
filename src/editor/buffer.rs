@@ -250,7 +250,6 @@ impl Buffer {
         if text.len() > usize::MAX {
             return Err("Текст слишком большой".to_string());
         }
-
         // Проверяем что текст содержит только валидные символы
         if text.chars().any(|c| c.is_control() && c != '\n' && c != '\t' && c != '\r') {
             return Err("Текст содержит недопустимые управляющие символы".to_string());
