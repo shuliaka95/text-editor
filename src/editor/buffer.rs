@@ -257,15 +257,15 @@ impl Buffer {
 
         //устанавливаем новый текст в буфер
         //разбиваем текст на строки
-        let lines:Vec<String> = text
+        let lines: Vec<String> = text
             .split('\n')
             .map(|s| s.to_string())
             .collect();
 
         //замена табуляции на пробелы
-        let lines:Vec<String> = text
-            .split('\n')
-            .map(|s| s.replace('t', "    "))
+        let lines: Vec<String> = lines
+            .iter()
+            .map(|s| s.replace('\t', "    "))
             .collect();
 
         //проверка на количество строк
@@ -294,6 +294,7 @@ impl Buffer {
 
         Ok(())
     }
+    
     pub fn get_cursor_position(&self) -> Position {
         self.cursor
     }
@@ -308,6 +309,159 @@ impl Buffer {
         } else {
             ""
         }
+    }
+    
+    // Новые методы для поддержки команд
+    
+    // Устанавливает позицию курсора
+    pub fn set_cursor_position(&mut self, pos: Position) -> Result<(), String> {
+        // Проверяем что позиция в пределах буфера
+        if pos.line >= self.lines.len() {
+            return Err("Позиция за пределами буфера".to_string());
+        }
+        
+        // Проверяем что позиция в пределах строки
+        let line = &self.lines[pos.line];
+        if pos.column > line.len() {
+            return Err("Позиция за пределами строки".to_string());
+        }
+        
+        // Устанавливаем позицию курсора
+        self.cursor = pos;
+        
+        Ok(())
+    }
+    
+    // Устанавливает выделение
+    pub fn set_selection(&mut self, start: Position, end: Position) -> Result<(), String> {
+        // Проверяем что начальная позиция в пределах буфера
+        if start.line >= self.lines.len() {
+            return Err("Начальная позиция за пределами буфера".to_string());
+        }
+        
+        // Проверяем что конечная позиция в пределах буфера
+        if end.line >= self.lines.len() {
+            return Err("Конечная позиция за пределами буфера".to_string());
+        }
+        
+        // Проверяем что начальная позиция в пределах строки
+        let start_line = &self.lines[start.line];
+        if start.column > start_line.len() {
+            return Err("Начальная позиция за пределами строки".to_string());
+        }
+        
+        // Проверяем что конечная позиция в пределах строки
+        let end_line = &self.lines[end.line];
+        if end.column > end_line.len() {
+            return Err("Конечная позиция за пределами строки".to_string());
+        }
+        
+        // Устанавливаем выделение
+        self.selection = Some((start, end));
+        
+        Ok(())
+    }
+    
+    // Получает выделение
+    pub fn get_selection(&self) -> Option<(Position, Position)> {
+        self.selection
+    }
+    
+    // Очищает выделение
+    pub fn clear_selection(&mut self) -> Result<(), String> {
+        self.selection = None;
+        Ok(())
+    }
+    
+    // Получает текст в указанном диапазоне
+    pub fn get_text_in_range(&self, start: Position, end: Position) -> Result<String, String> {
+        // Проверяем что начальная позиция в пределах буфера
+        if start.line >= self.lines.len() {
+            return Err("Начальная позиция за пределами буфера".to_string());
+        }
+        
+        // Проверяем что конечная позиция в пределах буфера
+        if end.line >= self.lines.len() {
+            return Err("Конечная позиция за пределами буфера".to_string());
+        }
+        
+        // Проверяем что начальная позиция в пределах строки
+        let start_line = &self.lines[start.line];
+        if start.column > start_line.len() {
+            return Err("Начальная позиция за пределами строки".to_string());
+        }
+        
+        // Проверяем что конечная позиция в пределах строки
+        let end_line = &self.lines[end.line];
+        if end.column > end_line.len() {
+            return Err("Конечная позиция за пределами строки".to_string());
+        }
+        
+        // Если выделение в одной строке
+        if start.line == end.line {
+            let line = &self.lines[start.line];
+            return Ok(line[start.column..end.column].to_string());
+        }
+        
+        // Если выделение в нескольких строках
+        let mut result = String::new();
+        
+        // Добавляем первую строку
+        let first_line = &self.lines[start.line];
+        result.push_str(&first_line[start.column..]);
+        result.push('\n');
+        
+        // Добавляем промежуточные строки
+        for i in start.line + 1..end.line {
+            result.push_str(&self.lines[i]);
+            result.push('\n');
+        }
+        
+        // Добавляем последнюю строку
+        let last_line = &self.lines[end.line];
+        result.push_str(&last_line[..end.column]);
+        
+        Ok(result)
+    }
+    
+    // Вставляет текст в текущую позицию курсора
+    pub fn insert_text(&mut self, text: String) -> Result<(), String> {
+        // Проверяем что текст не пустой
+        if text.is_empty() {
+            return Ok(());
+        }
+        
+        // Проверяем что текст не слишком большой
+        if text.len() > usize::MAX {
+            return Err("Текст слишком большой".to_string());
+        }
+        
+        // Проверяем что текст содержит только валидные символы
+        if text.chars().any(|c| c.is_control() && c != '\n' && c != '\t' && c != '\r') {
+            return Err("Текст содержит недопустимые управляющие символы".to_string());
+        }
+        
+        // Вставляем каждый символ
+        for c in text.chars() {
+            self.insert_char(c)?;
+        }
+        
+        Ok(())
+    }
+    
+    // Очищает буфер
+    pub fn clear(&mut self) -> Result<(), String> {
+        self.lines.clear();
+        self.lines.push_back(String::new());
+        self.cursor = Position { line: 0, column: 0 };
+        self.selection = None;
+        Ok(())
+    }
+    
+    // Добавляет строку в конец буфера
+    pub fn append_line(&mut self, line: String) -> Result<(), String> {
+        self.lines.push_back(line);
+        Ok(())
     }
 }
 

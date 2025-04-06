@@ -4,7 +4,7 @@ mod commands;
 use anyhow::Result;
 
 pub use buffer::{Buffer, Position};
-pub use commands::Command;
+pub use commands::{Command, CommandExecutor};
 
 pub struct Editor {
     buffer: Buffer,
@@ -22,27 +22,37 @@ impl Editor {
     }
 
     pub fn execute_command(&mut self, command: Command) -> Result<()> {
-        // TODO: Реализовать выполнение команд
+        // Реализуем выполнение команд
         // 1. Добавить команду в историю
         // 2. Очистить стек отмены
         // 3. Выполнить команду
-        todo!()
+        CommandExecutor::execute(self, command)
     }
 
     pub fn undo(&mut self) -> Result<()> {
-        // TODO: Реализовать отмену последней команды
+        // Реализуем отмену последней команды
         // 1. Взять последнюю команду из истории
         // 2. Добавить её в стек отмены
         // 3. Выполнить обратную команду
-        todo!()
+        CommandExecutor::undo(self)
     }
 
     pub fn redo(&mut self) -> Result<()> {
-        // TODO: Реализовать возврат отмененной команды
+        // Реализуем возврат отмененной команды
         // 1. Взять последнюю команду из стека отмены
         // 2. Добавить её обратно в историю
         // 3. Выполнить команду
-        todo!()
+        CommandExecutor::redo(self)
+    }
+    
+    // Получает буфер
+    pub fn get_buffer(&self) -> &Buffer {
+        &self.buffer
+    }
+    
+    // Получает мутабельную ссылку на буфер
+    pub fn get_buffer_mut(&mut self) -> &mut Buffer {
+        &mut self.buffer
     }
 }
 
